@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Register — The Visiola Foundation</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --vf-blue:#00AEEF; --vf-blue-dark:#0088C0; --vf-blue-light:#E0F6FD;
+  --vf-green:#AFCB08; --vf-green-light:#F3F8E0;
+  --vf-purple:#9A95C8; --vf-purple-light:#EEEDF8;
+  --vf-red:#D92121; --vf-red-light:#FDEAEA;
+  --vf-amber:#FCB040; --vf-amber-light:#FFF4E0;
+  --nav:#0C1E36;
+  --bg:#F4F6F9; --surface:#FFF; --surface2:#F8F9FB;
+  --border:#E4E8EF; --border2:#CDD3DE;
+  --text:#0D1B2E; --text2:#5A6478; --text3:#9AA3B2;
+  --r:8px; --rlg:12px;
+  --sh:0 1px 3px rgba(13,27,46,.08),0 1px 2px rgba(13,27,46,.04);
+  --sh-lg:0 8px 24px rgba(13,27,46,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* NAV */
+.nav{background:var(--nav);border-bottom:1px solid rgba(0,174,239,.15);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.nav-brand{display:flex;align-items:center;gap:14px}
+.nav-logo{height:34px;width:auto}
+.nav-sep{width:1px;height:28px;background:rgba(255,255,255,.15)}
+.nav-text .title{font-size:14px;font-weight:600;color:#fff}
+.nav-text .sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nbtn{padding:7px 14px;border-radius:var(--r);font-size:13px;font-family:inherit;font-weight:500;cursor:pointer;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);transition:background .15s;display:flex;align-items:center;gap:6px}
+.nbtn:hover{background:rgba(255,255,255,.16);color:#fff}
+.nbtn.primary{background:var(--vf-blue);border-color:var(--vf-blue);color:#fff}
+.nbtn.primary:hover{background:var(--vf-blue-dark)}
+.nbtn svg{flex-shrink:0}
+
+/* SYNC STATUS */
+.sync-bar{background:#1a2f4a;border-bottom:1px solid rgba(0,174,239,.1);padding:6px 1.5rem;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.5);gap:12px;flex-wrap:wrap}
+.sync-status{display:flex;align-items:center;gap:6px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#9AA3B2;flex-shrink:0}
+.sync-dot.ok{background:#AFCB08}
+.sync-dot.syncing{background:#FCB040;animation:blink .8s ease infinite alternate}
+.sync-dot.error{background:#D92121}
+@keyframes blink{to{opacity:.3}}
+.sync-actions{display:flex;gap:8px}
+.sync-btn{font-size:11px;font-family:inherit;padding:3px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s}
+.sync-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+
+/* MAIN */
+.main{max-width:1380px;margin:0 auto;padding:1.75rem 1.5rem}
+.page-header{margin-bottom:1.5rem}
+.page-header h1{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+.page-header p{font-size:13px;color:var(--text3);margin-top:3px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+.stat.s-blue::before{background:var(--vf-blue)}
+.stat.s-green::before{background:var(--vf-green)}
+.stat.s-amber::before{background:var(--vf-amber)}
+.stat.s-red::before{background:var(--vf-red)}
+.stat.s-purple::before{background:var(--vf-purple)}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.5px;line-height:1}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:5px}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:220px}
+.search-wrap input{width:100%;padding:9px 12px 9px 36px;font-size:13px;font-family:inherit;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;box-shadow:var(--sh)}
+.search-wrap input:focus{border-color:var(--vf-blue);box-shadow:0 0 0 3px rgba(0,174,239,.12)}
+.sico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+select.flt{padding:9px 10px;font-size:13px;font-family:inherit;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);cursor:pointer;outline:none;box-shadow:var(--sh);transition:border-color .15s}
+select.flt:focus{border-color:var(--vf-blue)}
+.count-info{font-size:12px;color:var(--text3);margin-bottom:8px}
+
+/* TABLE */
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);overflow:hidden;box-shadow:var(--sh);overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:1060px}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
+thead th:hover{color:var(--text)}
+thead th.sorted{color:var(--vf-blue)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F7F9FC;cursor:pointer}
+td{padding:10px 14px;vertical-align:middle}
+.td-name{font-weight:600;color:var(--text)}
+.td-mono{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--text2)}
+.td-mut{color:var(--text2)}
+.ecell{text-align:center;padding:4rem;color:var(--text3)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-it{background:var(--vf-blue-light);color:#006699}.b-it .dot{background:#006699}
+.b-stem{background:var(--vf-green-light);color:#608200}.b-stem .dot{background:#608200}
+.b-off{background:var(--vf-purple-light);color:#5A55A0}.b-off .dot{background:#5A55A0}
+.b-good{background:#EBF8EF;color:#1A7A40}.b-good .dot{background:#1A7A40}
+.b-bad{background:#FEF0E8;color:#B84800}.b-bad .dot{background:#B84800}
+.b-miss{background:#FEF3CD;color:#8A5E00}.b-miss .dot{background:#8A5E00}
+.b-stol{background:var(--vf-red-light);color:#A01010}.b-stol .dot{background:#A01010}
+.b-fin{background:#F4F4F4;color:#777}.b-fin .dot{background:#aaa}
+.b-na{background:#F4F4F4;color:#777}.b-na .dot{background:#aaa}
+.b-pur{background:#EBF8EF;color:#1A7A40}
+.b-don{background:var(--vf-blue-light);color:#006699}
+.b-asgn{background:var(--vf-amber-light);color:#8A5000}.b-asgn .dot{background:#8A5000}
+
+/* ROW ACTIONS */
+.racts{display:flex;gap:5px}
+.ibtn{width:28px;height:28px;border:1px solid var(--border);border-radius:var(--r);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s}
+.ibtn:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+.ibtn.del:hover{background:var(--vf-red-light);color:var(--vf-red);border-color:#F5C1C1}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:var(--r);font-size:13px;font-family:inherit;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .15s}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--vf-blue);color:#fff;border-color:var(--vf-blue)}
+.btn.pri:hover{background:var(--vf-blue-dark)}
+.btn.dan{background:var(--vf-red);color:#fff;border-color:var(--vf-red)}
+.btn.dan:hover{background:#B81C1C}
+
+/* MODAL */
+.ov{display:none;position:fixed;inset:0;background:rgba(13,27,46,.5);z-index:200;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
+.ov.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--rlg);border:1px solid var(--border);width:100%;max-width:500px;max-height:94vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:slideUp .18s ease}
+@keyframes slideUp{from{transform:translateY(10px);opacity:.6}to{transform:none;opacity:1}}
+.mhd{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.mhd h2{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.mbdy{padding:20px 22px}
+.mft{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.fr{margin-bottom:14px}
+.fr label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+.fr input,.fr select,.fr textarea{width:100%;padding:9px 11px;font-size:13px;font-family:inherit;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:var(--vf-blue);box-shadow:0 0 0 3px rgba(0,174,239,.12)}
+.fr textarea{resize:vertical;min-height:60px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:12px}
+
+/* SETTINGS MODAL */
+.settings-group{margin-bottom:18px}
+.settings-group h3{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)}
+.settings-note{font-size:12px;color:var(--text3);line-height:1.6;margin-top:6px}
+.settings-note a{color:var(--vf-blue);text-decoration:none}
+.settings-note a:hover{text-decoration:underline}
+.steps{counter-reset:step;margin-top:8px}
+.step{display:flex;gap:10px;margin-bottom:8px;font-size:12px;color:var(--text2);line-height:1.5}
+.step::before{counter-increment:step;content:counter(step);width:20px;height:20px;border-radius:50%;background:var(--vf-blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+
+/* CONFIRM */
+.cov{display:none;position:fixed;inset:0;background:rgba(13,27,46,.5);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.cov.open{display:flex}
+.cbox{background:var(--surface);border-radius:var(--rlg);border:1px solid var(--border);padding:24px;max-width:360px;width:100%;box-shadow:var(--sh-lg);animation:slideUp .15s ease;margin:1rem}
+.cbox h3{font-size:15px;font-weight:700;margin-bottom:8px}
+.cbox p{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+.cacts{display:flex;justify-content:flex-end;gap:8px}
+
+/* DRAWER */
+.dov{display:none;position:fixed;inset:0;background:rgba(13,27,46,.4);z-index:150;backdrop-filter:blur(2px)}
+.dov.open{display:block}
+.drawer{position:fixed;top:0;right:-440px;width:440px;max-width:95vw;height:100vh;background:var(--surface);border-left:1px solid var(--border);box-shadow:var(--sh-lg);z-index:151;overflow-y:auto;transition:right .25s ease;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.dhd{padding:20px 22px 16px;border-bottom:1px solid var(--border);background:var(--nav);flex-shrink:0}
+.dhd-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.dhd-name{font-size:16px;font-weight:700;color:#fff;line-height:1.3}
+.dhd-no{font-family:"JetBrains Mono",monospace;font-size:12px;color:rgba(255,255,255,.45);margin-top:3px}
+.dbdy{padding:20px 22px;flex:1}
+.dsec{margin-bottom:20px}
+.dsec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.drow{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #F1F5FA;gap:12px}
+.drow:last-child{border-bottom:none}
+.dk{font-size:12px;color:var(--text3);font-weight:500;flex-shrink:0;width:130px}
+.dv{font-size:13px;color:var(--text);font-weight:600;text-align:right;word-break:break-word}
+.dv.mono{font-family:"JetBrains Mono",monospace;font-size:11.5px}
+.dft{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--nav);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;font-weight:500;box-shadow:var(--sh-lg);z-index:999;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none;border-left:3px solid var(--vf-blue)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+@media(max-width:600px){
+  .fg{grid-template-columns:1fr}
+  .main{padding:1rem}
+  .nav,.sync-bar{padding-left:1rem;padding-right:1rem}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .drawer{width:100%;right:-100%}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <img src="https://www.visiolafoundation.org/wp-content/uploads/2023/09/VisiolaFoundation_logo_noslogan-1.png" class="nav-logo" alt="Visiola Foundation" onerror="this.style.display='none'">
+    <div class="nav-sep"></div>
+    <div class="nav-text">
+      <div class="title">Asset Register</div>
+      <div class="sub">The Visiola Foundation</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="nbtn" onclick="openSettings()" title="Google Sheets backup settings">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3 3l1.4 1.4M9.6 9.6L11 11M11 3l-1.4 1.4M4.4 9.6L3 11"/></svg>
+      Sheets Backup
+    </button>
+    <button class="nbtn" onclick="exportCSV()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 1v8M4 6l3 3 3-3M2 10v1.5A1.5 1.5 0 003.5 13h7A1.5 1.5 0 0012 11.5V10"/></svg>
+      Export CSV
+    </button>
+    <button class="nbtn primary" onclick="openModal()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
+      Add Asset
+    </button>
+  </div>
+</nav>
+
+<div class="sync-bar">
+  <div class="sync-status">
+    <div class="sync-dot" id="sdot"></div>
+    <span id="stext">Local storage only — connect Google Sheets for backup</span>
+  </div>
+  <div class="sync-actions">
+    <button class="sync-btn" id="sync-now-btn" onclick="syncToSheets()" style="display:none">Sync now</button>
+    <button class="sync-btn" onclick="openSettings()">Configure backup</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <h1>Asset Register</h1>
+    <p>Full inventory of foundation assets — equipment, STEM materials and office supplies.</p>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="sico" width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="4.5"/><line x1="9.8" y1="9.8" x2="13" y2="13"/></svg>
+      <input type="text" id="search" placeholder="Search by name, asset number, serial number, staff…" oninput="render()">
+    </div>
+    <select class="flt" id="fCat" onchange="render()">
+      <option value="">All categories</option>
+      <option>IT &amp; Electronics</option>
+      <option>STEM Materials</option>
+      <option>Office &amp; Admin</option>
+    </select>
+    <select class="flt" id="fCond" onchange="render()">
+      <option value="">All conditions</option>
+      <option>Good</option><option>Bad</option><option>Missing</option>
+      <option>Stolen</option><option>Finished</option><option>Not available</option>
+    </select>
+    <select class="flt" id="fAcq" onchange="render()">
+      <option value="">All acquisition</option>
+      <option>Purchased</option><option>Donated</option>
+    </select>
+    <select class="flt" id="fAssign" onchange="render()">
+      <option value="">All assignments</option>
+      <option value="assigned">Currently assigned</option>
+      <option value="unassigned">Unassigned / returned</option>
+    </select>
+  </div>
+  <div class="count-info" id="cinfo"></div>
+
+  <div class="tcard">
+    <table>
+      <thead><tr>
+        <th style="width:40px" onclick="sortBy('idx')" id="th-idx">#</th>
+        <th onclick="sortBy('name')" id="th-name">Item Name</th>
+        <th onclick="sortBy('category')" id="th-category">Category</th>
+        <th onclick="sortBy('asset_number')" id="th-asset_number">Asset No.</th>
+        <th onclick="sortBy('serial')" id="th-serial">Serial No.</th>
+        <th onclick="sortBy('condition')" id="th-condition">Condition</th>
+        <th onclick="sortBy('acquisition')" id="th-acquisition">Acquisition</th>
+        <th onclick="sortBy('sub_total')" id="th-sub_total">Value (&#8358;)</th>
+        <th onclick="sortBy('acquired')" id="th-acquired">Acquired</th>
+        <th onclick="sortBy('staff')" id="th-staff">Assigned To</th>
+        <th style="width:76px">Actions</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="ov" id="mov">
+  <div class="modal">
+    <div class="mhd">
+      <h2 id="mtitle">Add Asset</h2>
+      <button class="ibtn" onclick="closeModal()"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="12" y2="12"/><line x1="12" y1="1" x2="1" y2="12"/></svg></button>
+    </div>
+    <div class="mbdy">
+      <div class="sl">Basic Information</div>
+      <div class="fr"><label>Item Name *</label><input id="fn" type="text" placeholder="e.g. HP Laptop"></div>
+      <div class="fg">
+        <div class="fr"><label>Category</label><select id="fcat"><option>IT &amp; Electronics</option><option>STEM Materials</option><option>Office &amp; Admin</option></select></div>
+        <div class="fr"><label>Condition</label><select id="fcond"><option>Good</option><option>Bad</option><option>Missing</option><option>Stolen</option><option>Finished</option><option>Not available</option></select></div>
+      </div>
+      <div class="fg">
+        <div class="fr"><label>Asset Number</label><input id="fan" type="text" placeholder="VF/ADM.IT/…"></div>
+        <div class="fr"><label>Serial Number</label><input id="fsn" type="text" placeholder="Serial / IMEI"></div>
+      </div>
+      <div class="sl" style="margin-top:16px">Acquisition</div>
+      <div class="fg">
+        <div class="fr"><label>How Acquired</label><select id="facq"><option>Purchased</option><option>Donated</option></select></div>
+        <div class="fr"><label>Date Acquired</label><input id="fdt" type="date"></div>
+      </div>
+      <div class="fg">
+        <div class="fr"><label>Unit Cost (&#8358;)</label><input id="fuc" type="number" min="0" placeholder="0"></div>
+        <div class="fr"><label>Quantity</label><input id="fqt" type="number" min="1" value="1" placeholder="1"></div>
+      </div>
+      <div class="sl" style="margin-top:16px">Assignment</div>
+      <div class="fg">
+        <div class="fr"><label>Assigned To</label><input id="fst" type="text" placeholder="Staff name"></div>
+        <div class="fr"><label>Date Assigned</label><input id="fda" type="date"></div>
+      </div>
+      <div class="fr"><label>Date Returned</label><input id="fdr" type="date"></div>
+      <div class="fr"><label>Notes / Remarks</label><textarea id="fno" placeholder="Serial details, condition notes, additional info…"></textarea></div>
+    </div>
+    <div class="mft">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn pri" onclick="saveAsset()">Save Asset</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="ov" id="sov">
+  <div class="modal">
+    <div class="mhd">
+      <h2>Google Sheets Backup</h2>
+      <button class="ibtn" onclick="closeSettings()"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="12" y2="12"/><line x1="12" y1="1" x2="1" y2="12"/></svg></button>
+    </div>
+    <div class="mbdy">
+      <div class="settings-group">
+        <h3>How it works</h3>
+        <p class="settings-note">This app saves data in your browser automatically. Google Sheets acts as a cloud backup — every time you add, edit or delete an asset, it syncs a copy to a Google Sheet you control. No server required.</p>
+      </div>
+      <div class="settings-group">
+        <h3>Setup (one-time, ~3 minutes)</h3>
+        <div class="steps">
+          <div class="step">Go to <a href="https://sheets.google.com" target="_blank">sheets.google.com</a> and create a new spreadsheet called <strong>VF Asset Register</strong>.</div>
+          <div class="step">Click <strong>Extensions → Apps Script</strong>. Delete any code there and paste the script below, then click Save (floppy disk icon).</div>
+          <div class="step">Click <strong>Deploy → New deployment → Web app</strong>. Set "Who has access" to <strong>Anyone</strong>. Click Deploy and copy the Web App URL.</div>
+          <div class="step">Paste that URL in the field below and click Save. Done — all changes will sync automatically.</div>
+        </div>
+        <div style="margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);white-space:pre-wrap;line-height:1.6;max-height:160px;overflow-y:auto">function doPost(e){
+  var data = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Assets') || ss.insertSheet('Assets');
+  sheet.clearContents();
+  var headers = ['ID','Name','Category','Asset No','Serial No','Condition',
+    'Acquisition','Unit Cost','Quantity','Sub-Total','Acquired',
+    'Assigned To','Date Assigned','Date Returned','Notes'];
+  sheet.appendRow(headers);
+  data.forEach(function(r){
+    sheet.appendRow([r._id,r.name,r.category,r.asset_number||'',
+      r.serial||'',r.condition,r.acquisition||'',r.unit_cost||0,
+      r.quantity||1,r.sub_total||0,r.acquired||'',r.staff||'',
+      r.date_assigned||'',r.date_returned||'',r.notes||''
+    ]);
+  });
+  return ContentService.createTextOutput('OK');
+}
+
+function doGet(e){
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Assets');
+  if(!sheet) return ContentService.createTextOutput(JSON.stringify([]));
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var data = rows.slice(1).map(function(r){
+    var obj={};
+    headers.forEach(function(h,i){obj[h]=r[i];});
+    return obj;
+  });
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+      </div>
+      <div class="settings-group">
+        <div class="fr"><label>Web App URL</label><input id="sheets-url" type="url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn pri" onclick="saveSheetUrl()" style="flex:1">Save &amp; Test Connection</button>
+          <button class="btn" onclick="clearSheetUrl()">Disconnect</button>
+        </div>
+        <p class="settings-note" id="url-status" style="margin-top:8px"></p>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn" onclick="closeSettings()">Close</button>
+      <button class="btn pri" onclick="syncToSheets()" id="manual-sync-btn" style="display:none">Sync now</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="cov" id="cov">
+  <div class="cbox">
+    <h3>Delete this asset?</h3>
+    <p id="cmsg">This cannot be undone.</p>
+    <div class="cacts">
+      <button class="btn" onclick="closeConfirm()">Cancel</button>
+      <button class="btn dan" id="cok">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="dov" id="dov" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dhd">
+    <div class="dhd-top">
+      <div><div class="dhd-name" id="dname"></div><div class="dhd-no" id="dno"></div></div>
+      <button class="ibtn" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7);flex-shrink:0" onclick="closeDrawer()"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="12" y2="12"/><line x1="12" y1="1" x2="1" y2="12"/></svg></button>
+    </div>
+    <div id="dbadges" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
+  </div>
+  <div class="dbdy" id="dbdy"></div>
+  <div class="dft" id="dft"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STORAGE KEY — bump this to force fresh load if seed data changes
+const SK = 'vf_assets_v4';
+
+const SEED_DATA = [{"no": "1", "name": "White Board", "unit_cost": "8500", "quantity": "1", "sub_total": "8500", "acquired": "2020-05-16", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/WB/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 1}, {"no": "2", "name": "A4 Paper", "unit_cost": "1800", "quantity": "2", "sub_total": "3600", "acquired": "2016-01-06", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/PAP/A4/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 2}, {"no": "3", "name": "Flip Chart", "unit_cost": "1800", "quantity": "1", "sub_total": "1800", "acquired": "2016-01-06", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/FC/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 3}, {"no": "4", "name": "Office Pins", "unit_cost": "800", "quantity": "1", "sub_total": "800", "acquired": "2016-01-06", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/PINS/001-003", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Finished", "category": "Office & Admin", "_id": 4}, {"no": "5", "name": "Post It Notes", "unit_cost": "1800", "quantity": "2", "sub_total": "3600", "acquired": "2016-01-06", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/PST/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Finished", "category": "Office & Admin", "_id": 5}, {"no": "6", "name": "Thumb Tacks", "unit_cost": "50", "quantity": "1", "sub_total": "50", "acquired": "2016-01-06", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/TT/0001-002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Finished", "category": "Office & Admin", "_id": 6}, {"no": "7", "name": "Large Banner", "unit_cost": "2000", "quantity": "2", "sub_total": "4000", "acquired": "2015-01-07", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM/DUS/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 7}, {"no": "8", "name": "Paper Clips", "unit_cost": "920", "quantity": "1", "sub_total": "920", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/PCL/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 8}, {"no": "9", "name": "Pens", "unit_cost": "50", "quantity": "10", "sub_total": "500", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/STA/PEN/001-003", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 9}, {"no": "10", "name": "Brown Envelopes", "unit_cost": "50", "quantity": "1", "sub_total": "50", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/STA/ENV/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Finished", "category": "Office & Admin", "_id": 10}, {"no": "11", "name": "Office Folder", "unit_cost": "1790", "quantity": "1", "sub_total": "1790", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/FOL/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 11}, {"no": "12", "name": "Staplers", "unit_cost": "2800", "quantity": "2", "sub_total": "5600", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/ST/001-002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Not available", "category": "Office & Admin", "_id": 12}, {"no": "13", "name": "Stapling Pins", "unit_cost": "2000", "quantity": "2", "sub_total": "4000", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/STAP/001-002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Not available", "category": "Office & Admin", "_id": 13}, {"no": "14", "name": "Binder Clips (Small)", "unit_cost": "350", "quantity": "2", "sub_total": "700", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/BCS/001-002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Not available", "category": "Office & Admin", "_id": 14}, {"no": "15", "name": "Binder Clips (Big)", "unit_cost": "900", "quantity": "1", "sub_total": "900", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/BCB/001-004", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Not available", "category": "Office & Admin", "_id": 15}, {"no": "16", "name": "Pin Remover", "unit_cost": "950", "quantity": "1", "sub_total": "950", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/PR/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Not available", "category": "Office & Admin", "_id": 16}, {"no": "18", "name": "Scissors", "unit_cost": "980", "quantity": "1", "sub_total": "980", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/SCI/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 17}, {"no": "19", "name": "Easy Glue", "unit_cost": "600", "quantity": "1", "sub_total": "600", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/GLU/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Finished", "category": "Office & Admin", "_id": 18}, {"no": "20", "name": "File And Pen Holder", "unit_cost": "600", "quantity": "1", "sub_total": "600", "acquired": "2016-01-06", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/STA/FPH/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 19}, {"no": "21", "name": "Elenco Snap Circuits Jnr.", "unit_cost": "9120", "quantity": "28", "sub_total": "255360", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ELEC/ESC/001-005", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 20}, {"no": "22", "name": "Pull Out- Banners", "unit_cost": "22000", "quantity": "7", "sub_total": "154000", "acquired": "2016-01-06", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM/MKT/POB/001-007", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 21}, {"no": "23", "name": "Pull Out- Banners", "unit_cost": "22000", "quantity": "1", "sub_total": "22000", "acquired": "2016-01-06", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM/MKT/POB/008", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "Office & Admin", "_id": 22}, {"no": "24", "name": "Lego Mindstorm Box", "unit_cost": "152000", "quantity": "1", "sub_total": "152000", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LMS/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 23}, {"no": "25", "name": "Lego Mind Storm Carton", "unit_cost": "425600", "quantity": "1", "sub_total": "425600", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LMS/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 24}, {"no": "26", "name": "4M Science Kits", "unit_cost": "3648", "quantity": "23", "sub_total": "83904", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/SCI/WAT/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 25}, {"no": "27", "name": "Science Experiments Book", "unit_cost": "6080", "quantity": "1", "sub_total": "6080", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/SCI/BK/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 26}, {"no": "28", "name": "Hp Laptop", "unit_cost": "143245", "quantity": "1", "sub_total": "143245", "acquired": "2017-01-17", "acquisition": "Purchased", "serial": "CND62228RF; CND6316VCD", "asset_number": "VF/ADM.IT/LPT/SCH/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 27}, {"no": "28", "name": "Hp Laptop", "unit_cost": "143245", "quantity": "1", "sub_total": "143245", "acquired": "2017-01-17", "acquisition": "Purchased", "serial": "5CG414DSCM", "asset_number": "VF/ADM.IT/LPT/SCH/003", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 28}, {"no": "28", "name": "Projector", "unit_cost": "158000", "quantity": "1", "sub_total": "158000", "acquired": "2017-03-21", "acquisition": "Purchased", "serial": "MRJN811001628017D35900", "asset_number": "VF/ADM.IT/PRJCT/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 29}, {"no": "29", "name": "Projector Screen", "unit_cost": "22000", "quantity": "1", "sub_total": "22000", "acquired": "2017-03-21", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM.IT/PRJCT-SCRN/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 30}, {"no": "30", "name": "Hp Printer", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "CN99EBY117", "asset_number": "VF/ADM.IT/PRNT/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 31}, {"no": "31", "name": "Hp Laptop", "unit_cost": "125000", "quantity": "1", "sub_total": "125000", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "CND6032W6J", "asset_number": "VF/ADM.IT/LPT/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 32}, {"no": "32", "name": "Dell Laptop", "unit_cost": "125000", "quantity": "1", "sub_total": "125000", "acquired": "2016-01-05", "acquisition": "Donated", "serial": "10271470322", "asset_number": "VF/ADM.IT/LPT/002", "staff": "BLESSING", "date_assigned": "2022-06-01", "date_returned": "2025-01-01", "condition": "Good", "category": "IT & Electronics", "_id": 33}, {"no": "33", "name": "Hp Laptop", "unit_cost": "98100", "quantity": "2", "sub_total": "196150", "acquired": "2017-07-31", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM.IT/LPT/003", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 34}, {"no": "34", "name": "Itel 1556 Andriod Phone", "unit_cost": "24999", "quantity": "1", "sub_total": "24999", "acquired": "2017-07-31", "acquisition": "Purchased", "serial": "G5N2", "asset_number": "VF/ADM.IT/PHN/001", "staff": "FATIMA", "date_assigned": "2024-02-19", "date_returned": "", "condition": "Missing", "category": "IT & Electronics", "_id": 35}, {"no": "35", "name": "Itel 1556 Andriod Phone", "unit_cost": "24999", "quantity": "1", "sub_total": "24999", "acquired": "2017-07-31", "acquisition": "Purchased", "serial": "G7N2", "asset_number": "VF/ADM.IT/PHN/002", "staff": "FRIEDA", "date_assigned": "2024-04-01", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 36}, {"no": "36", "name": "Itel 1556 Andriod Phone", "unit_cost": "24999", "quantity": "1", "sub_total": "24999", "acquired": "2017-07-31", "acquisition": "Purchased", "serial": "G5N2", "asset_number": "VF/ADM.IT/PHN/003", "staff": "SILIFAT", "date_assigned": "2024-05-01", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 37}, {"no": "37", "name": "Itel 1556 Andriod Phone", "unit_cost": "24999", "quantity": "1", "sub_total": "24999", "acquired": "2017-07-31", "acquisition": "Purchased", "serial": "G6N2", "asset_number": "VF/ADM.IT/PHN/004", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Missing", "category": "IT & Electronics", "_id": 38}, {"no": "38", "name": "Trolley Speaker And Microphone", "unit_cost": "87000", "quantity": "1", "sub_total": "89000", "acquired": "2017-07-31", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM.IT/TROL/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 39}, {"no": "39", "name": "Nikon Camera", "unit_cost": "145000", "quantity": "1", "sub_total": "145750", "acquired": "2017-07-31", "acquisition": "Purchased", "serial": "7185558", "asset_number": "VF/ADM.IT/CMR/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 40}, {"no": "40", "name": "Lego Ev3 Kit", "unit_cost": "3359450.5", "quantity": "1", "sub_total": "3359450.5", "acquired": "2017-04-09", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LEV3/001-12; VF/ADM/MAT/ROB/LMS/001-012; VF/ADM/MAT/ROB/LE/001-12;", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 41}, {"no": "41", "name": "Spectranet Modem", "unit_cost": "25000", "quantity": "1", "sub_total": "25000", "acquired": "2019-06-05", "acquisition": "Purchased", "serial": "P21867070020675844", "asset_number": "VF/ADM/IT/ROUT/SPEC/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 42}, {"no": "42", "name": "Spectranet Modem", "unit_cost": "25000", "quantity": "1", "sub_total": "25000", "acquired": "2019-06-05", "acquisition": "Purchased", "serial": "P21867070020774654", "asset_number": "VF/ADM/IT/ROUT/SPEC/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 43}, {"no": "43", "name": "Hp Laptop", "unit_cost": "95000", "quantity": "1", "sub_total": "95000", "acquired": "2019-07-27", "acquisition": "Purchased", "serial": "CND9014FXS", "asset_number": "VF/ADM.IT/LPT/004", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 44}, {"no": "44", "name": "Hp Laptop", "unit_cost": "95000", "quantity": "1", "sub_total": "95000", "acquired": "2019-07-27", "acquisition": "Purchased", "serial": "CND9014H6W", "asset_number": "VF/ADM.IT/LPT/005", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 45}, {"no": "45", "name": "Hp Laptop", "unit_cost": "95000", "quantity": "1", "sub_total": "95000", "acquired": "2019-07-27", "acquisition": "Purchased", "serial": "CND9014F6V", "asset_number": "VF/ADM.IT/LPT/006", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 46}, {"no": "46", "name": "Hp Laptop", "unit_cost": "95000", "quantity": "1", "sub_total": "95000", "acquired": "2019-07-27", "acquisition": "Purchased", "serial": "CND90554SN", "asset_number": "VF/ADM.IT/LPT/007", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 47}, {"no": "47", "name": "Hp Laptop", "unit_cost": "95000", "quantity": "1", "sub_total": "95000", "acquired": "2019-07-27", "acquisition": "Purchased", "serial": "CND90142LS", "asset_number": "VF/ADM.IT/LPT/008", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 48}, {"no": "47.9946808510638", "name": "Kano Computer", "unit_cost": "21600", "quantity": "1", "sub_total": "21600", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "CKL18430026552", "asset_number": "VF/ADM/IT/KANO/01", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 49}, {"no": "48.9613004776379", "name": "Kano Computer", "unit_cost": "21600", "quantity": "1", "sub_total": "21600", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "CKL18430026491", "asset_number": "VF/ADM/IT/KANO/02", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 50}, {"no": "49.9279201042119", "name": "Kano Computer", "unit_cost": "21600", "quantity": "1", "sub_total": "21600", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "CKL18430026639", "asset_number": "VF/ADM/IT/KANO/03", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 51}, {"no": "50.8945397307859", "name": "Kano Computer", "unit_cost": "21600", "quantity": "1", "sub_total": "21600", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "CKL18430027214", "asset_number": "VF/ADM/IT/KANO/04;", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 52}, {"no": "51.86115935736", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/01", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 53}, {"no": "52.827778983934", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/02", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 54}, {"no": "53.794398610508", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/03", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 55}, {"no": "54.7610182370821", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/04", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 56}, {"no": "55.7276378636561", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/05", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 57}, {"no": "56.6942574902301", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/06", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 58}, {"no": "57.6608771168042", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/07", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 59}, {"no": "58.6274967433782", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/08", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 60}, {"no": "59.5941163699522", "name": "Arduino Kit", "unit_cost": "26000", "quantity": "1", "sub_total": "26000", "acquired": "2019-08-23", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/IT/ARDU/09", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 61}, {"no": "60.5607359965263", "name": "Hp Laptop", "unit_cost": "248000", "quantity": "1", "sub_total": "248000", "acquired": "2023-03-29", "acquisition": "Purchased", "serial": "CND1216BTQ", "asset_number": "VF/ADM.IT/LPT/011", "staff": "WASILA", "date_assigned": "2024-09-01", "date_returned": "2025-02-01", "condition": "Good", "category": "IT & Electronics", "_id": 62}, {"no": "61.5273556231003", "name": "Hp Laptop", "unit_cost": "248000", "quantity": "1", "sub_total": "248000", "acquired": "2023-03-29", "acquisition": "Purchased", "serial": "CND1216BMD", "asset_number": "VF/ADM.IT/LPT/012", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Stolen", "category": "IT & Electronics", "_id": 63}, {"no": "62.4939752496743", "name": "Portable Inverter(Small)", "unit_cost": "116500", "quantity": "1", "sub_total": "116500", "acquired": "2021-09-21", "acquisition": "Purchased", "serial": "", "asset_number": "", "staff": "", "date_assigned": "2023-10-01", "date_returned": "", "condition": "Missing", "category": "IT & Electronics", "_id": 64}, {"no": "63.4605948762484", "name": "Flash Drive", "unit_cost": "5500", "quantity": "0", "sub_total": "5500", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "", "asset_number": "", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Missing", "category": "Office & Admin", "_id": 65}, {"no": "64.4272145028224", "name": "Mifi", "unit_cost": "19500", "quantity": "4", "sub_total": "78000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "", "asset_number": "", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 66}, {"no": "65.3938341293964", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD315BHDV", "asset_number": "VF/ADM.IT/LPT/04", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 67}, {"no": "66.3604537559705", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD315BHD1", "asset_number": "VF/ADM.IT/LPT/05", "staff": "SILIFAT", "date_assigned": "2024-05-01", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 68}, {"no": "67.3270733825445", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD3167JDL", "asset_number": "VF/ADM.IT/LPT/06", "staff": "FRIEDA", "date_assigned": "2024-04-01", "date_returned": "2025-12-01", "condition": "Good", "category": "IT & Electronics", "_id": 69}, {"no": "68.2936930091185", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD315BHD8", "asset_number": "VF/ADM.IT/LPT/07", "staff": "OGECHI", "date_assigned": "2024-04-01", "date_returned": "2025-12-01", "condition": "Good", "category": "IT & Electronics", "_id": 70}, {"no": "69.2603126356926", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD3167JDG", "asset_number": "VF/ADM.IT/LPT/08", "staff": "AYOMIDE", "date_assigned": "2024-07-01", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 71}, {"no": "70.2269322622666", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD3167JBM", "asset_number": "VF/ADM.IT/LPT/03", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 72}, {"no": "71.1935518888406", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD3167JBZ", "asset_number": "VF/ADM.IT/LPT/09", "staff": "PRINCESS", "date_assigned": "2024-10-01", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 73}, {"no": "72.1601715154147", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD3167JB1", "asset_number": "VF/ADM.IT/LPT/010", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 74}, {"no": "73.1267911419887", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD3167JCD", "asset_number": "VF/ADM.IT/LPT/02", "staff": "ELIZABETH", "date_assigned": "2024-04-01", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 75}, {"no": "74.0934107685628", "name": "Hp Laptop", "unit_cost": "410000", "quantity": "1", "sub_total": "410000", "acquired": "2024-04-16", "acquisition": "Purchased", "serial": "5CD3167JDB", "asset_number": "VF/ADM.IT/LPT/01", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 76}, {"no": "75.0600303951368", "name": "Ye Robotics Ev3 Core Set", "unit_cost": "618500", "quantity": "1", "sub_total": "618500", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LMS/011", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 77}, {"no": "76.0266500217108", "name": "Ye Robotics Ev3 Core Set", "unit_cost": "618500", "quantity": "1", "sub_total": "618500", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LMS/012", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 78}, {"no": "76.9932696482849", "name": "Ye Robotics Ev3 Core Set", "unit_cost": "618500", "quantity": "1", "sub_total": "618500", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LMS/013", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 79}, {"no": "77.9598892748589", "name": "Ye Robotics Ev3 Core Set", "unit_cost": "618500", "quantity": "1", "sub_total": "618500", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LMS/014", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 80}, {"no": "78.9265089014329", "name": "Ye Robotics Ev3 Core Set", "unit_cost": "618500", "quantity": "1", "sub_total": "618500", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/ROB/LMS/015", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 81}, {"no": "79.893128528007", "name": "Ac Charger", "unit_cost": "12000", "quantity": "1", "sub_total": "12000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/CHA/LMS/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 82}, {"no": "80.859748154581", "name": "Ac Charger", "unit_cost": "12000", "quantity": "1", "sub_total": "12000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/CHA/LMS/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 83}, {"no": "81.826367781155", "name": "Ac Charger", "unit_cost": "12000", "quantity": "1", "sub_total": "12000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/CHA/LMS/003", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 84}, {"no": "82.7929874077291", "name": "Ac Charger", "unit_cost": "12000", "quantity": "1", "sub_total": "12000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/CHA/LMS/004", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 85}, {"no": "83.7596070343031", "name": "Ac Charger", "unit_cost": "12000", "quantity": "1", "sub_total": "12000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/CHA/LMS/005", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 86}, {"no": "84.7262266608771", "name": "Smart Bricks", "unit_cost": "108000", "quantity": "1", "sub_total": "108000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/SMA/LMS/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 87}, {"no": "85.6928462874512", "name": "Smart Bricks", "unit_cost": "108000", "quantity": "1", "sub_total": "108000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/SMA/LMS/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 88}, {"no": "86.6594659140252", "name": "Smart Bricks", "unit_cost": "108000", "quantity": "1", "sub_total": "108000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/SMA/LMS/003", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 89}, {"no": "87.6260855405992", "name": "Smart Bricks", "unit_cost": "108000", "quantity": "1", "sub_total": "108000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/SMA/LMS/004", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 90}, {"no": "88.5927051671733", "name": "Smart Bricks", "unit_cost": "108000", "quantity": "1", "sub_total": "108000", "acquired": "2024-01-07", "acquisition": "Donated", "serial": "", "asset_number": "VF/ADM/MAT/SMA/LMS/005", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 91}, {"no": "89.5593247937473", "name": "4Wd Obstacle Avoidance Smart Robot Car Kit", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "GB/TISO28001", "asset_number": "VF/ADM/ROC/OAS/RCK/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 92}, {"no": "90.5259444203213", "name": "4Wd Obstacle Avoidance Smart Robot Car Kit", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "GB/TISO14001", "asset_number": "VF/ADM/ROC/OAS/RCK/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 93}, {"no": "91.4925640468954", "name": "4Wd Obstacle Avoidance Smart Robot Car Kit", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "GB/TISO15001", "asset_number": "VF/ADM/ROC/OAS/RCK/003", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 94}, {"no": "92.4591836734694", "name": "4Wd Obstacle Avoidance Smart Robot Car Kit", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "GB/TISO26001", "asset_number": "VF/ADM/ROC/OAS/RCK/004", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 95}, {"no": "93.4258033000434", "name": "Educational Robotic Kit", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "M020.00859", "asset_number": "VF/ADM/E3/ERK/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 96}, {"no": "94.3924229266175", "name": "Educational Robotic Kit", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "M020.02023", "asset_number": "VF/ADM/E3/ERK/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "STEM Materials", "_id": 97}, {"no": "95.3590425531915", "name": "Smart Charger", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "BH-18650-02", "asset_number": "VF/ADM/SMC/LIB/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 98}, {"no": "96.3256621797655", "name": "Smart Charger", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "2024-02-12", "acquisition": "Donated", "serial": "BH-18650-02", "asset_number": "VF/ADM/SMC/LIB/002", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 99}, {"no": "97.2922818063396", "name": "Paper Shredder", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM/IT/SHDDR/001", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 100}, {"no": "98.2589014329136", "name": "Inverter(Big)", "unit_cost": "", "quantity": "1", "sub_total": "", "acquired": "", "acquisition": "", "serial": "", "asset_number": "", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 101}, {"no": "99.2255210594876", "name": "Inverter Batteries", "unit_cost": "", "quantity": "4", "sub_total": "", "acquired": "", "acquisition": "", "serial": "", "asset_number": "", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Bad", "category": "IT & Electronics", "_id": 102}, {"no": "100.192140686062", "name": "Redmi Phone", "unit_cost": "91500", "quantity": "1", "sub_total": "91500", "acquired": "2024-02-19", "acquisition": "Purchased", "serial": "46565/63WU03309", "asset_number": "VF/ADM.IT/PHN/001", "staff": "FATIMA (ASCG Student)", "date_assigned": "2024-02-01", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 103}, {"no": "101.158760312636", "name": "Redmi Phone", "unit_cost": "91500", "quantity": "1", "sub_total": "91500", "acquired": "2024-02-19", "acquisition": "Purchased", "serial": "46565/63WU01172", "asset_number": "VF/ADM.IT/PHN/002", "staff": "FRIEDA", "date_assigned": "2024-02-01", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 104}, {"no": "102.12537993921", "name": "Redmi Phone", "unit_cost": "91500", "quantity": "1", "sub_total": "91500", "acquired": "2024-02-19", "acquisition": "Purchased", "serial": "46565/63W U06290", "asset_number": "VF/ADM.IT/PHN/003", "staff": "SILIFAT", "date_assigned": "2024-02-01", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 105}, {"no": "103.091999565784", "name": "Redmi Phone", "unit_cost": "91500", "quantity": "1", "sub_total": "91500", "acquired": "2024-02-19", "acquisition": "Purchased", "serial": "49644/63Z804017", "asset_number": "VF/ADM.IT/PHN/004", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 106}, {"no": "104.058619192358", "name": "Redmi Phone", "unit_cost": "91500", "quantity": "1", "sub_total": "91500", "acquired": "2024-02-19", "acquisition": "Purchased", "serial": "9DT8LNNFBE9D5HF6", "asset_number": "VF/ADM.IT/PHN/005", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 107}, {"no": "105.025238818932", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG00915NV", "asset_number": "VF/ADM.IT/LPT/11", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 108}, {"no": "105.991858445506", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG012BKNT", "asset_number": "VF/ADM.IT/LPT/12", "staff": "JULIET", "date_assigned": "2026-01-28", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 109}, {"no": "106.95847807208", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG0203Z87", "asset_number": "VF/ADM.IT/LPT/13", "staff": "DIVINE", "date_assigned": "2026-01-28", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 110}, {"no": "107.925097698654", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG0100J47", "asset_number": "VF/ADM.IT/LPT/14", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 111}, {"no": "108.891717325228", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG020BCVB", "asset_number": "VF/ADM.IT/LPT/15", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 112}, {"no": "109.858336951802", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG952917L", "asset_number": "VF/ADM.IT/LPT/16", "staff": "VICTORIA", "date_assigned": "2026-01-28", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 113}, {"no": "110.824956578376", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG0149J9P", "asset_number": "VF/ADM.IT/LPT/17", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 114}, {"no": "111.79157620495", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG02274OVP", "asset_number": "VF/ADM.IT/LPT/18", "staff": "DORCAS", "date_assigned": "2025-11-20", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 115}, {"no": "112.758195831524", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG02131B4", "asset_number": "VF/ADM.IT/LPT/19", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 116}, {"no": "113.724815458098", "name": "Hp Laptops", "unit_cost": "477513.1", "quantity": "1", "sub_total": "477513.1", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "5CG012BPDS", "asset_number": "VF/ADM.IT/LPT/20", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 117}, {"no": "114.691435084672", "name": "Wireless Microphone", "unit_cost": "14000", "quantity": "1", "sub_total": "14000", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM.IT/MIC/1", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 118}, {"no": "115.658054711246", "name": "Wireless Microphone", "unit_cost": "14000", "quantity": "1", "sub_total": "14000", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM.IT/MIC/2", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 119}, {"no": "116.62467433782", "name": "Wireless Microphone", "unit_cost": "14000", "quantity": "1", "sub_total": "14000", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM.IT/MIC/3", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 120}, {"no": "117.591293964394", "name": "Wireless Microphone", "unit_cost": "14000", "quantity": "1", "sub_total": "14000", "acquired": "2025-05-09", "acquisition": "Purchased", "serial": "", "asset_number": "VF/ADM.IT/MIC/4", "staff": "", "date_assigned": "", "date_returned": "", "condition": "Good", "category": "IT & Electronics", "_id": 121}];
+
+// ── BOOT: always check if stored data is older seed, migrate if needed
+(function boot(){
+  // clear any old keys from previous versions
+  ['vf_assets_v1','vf_assets_v2','vf_assets_v3'].forEach(k=>localStorage.removeItem(k));
+  let stored = localStorage.getItem(SK);
+  if(!stored){
+    // first load — seed from spreadsheet data
+    let seeded = SEED_DATA.map((a,i)=>({...a, _id: i+1}));
+    localStorage.setItem(SK, JSON.stringify(seeded));
+  }
+})();
+
+let assets = JSON.parse(localStorage.getItem(SK));
+let nextId = assets.reduce((m,a)=>Math.max(m,a._id||0),0)+1;
+let editId=null, sortCol='idx', sortDir=1;
+
+const save = () => {
+  localStorage.setItem(SK, JSON.stringify(assets));
+  autoSync();
+};
+
+const fmt = n => { if(!n && n!==0) return '—'; let v=parseFloat(n); return isNaN(v)?n:Math.round(v).toLocaleString('en-NG'); };
+const fmtD = d => { if(!d) return '—'; let p=d.split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d; };
+
+const catB = c => {
+  if(c==='IT & Electronics') return`<span class="badge b-it"><span class="dot"></span>IT & Electronics</span>`;
+  if(c==='STEM Materials') return`<span class="badge b-stem"><span class="dot"></span>STEM Materials</span>`;
+  return`<span class="badge b-off"><span class="dot"></span>Office & Admin</span>`;
+};
+const condB = c => {
+  const m={Good:'b-good',Bad:'b-bad',Missing:'b-miss',Stolen:'b-stol',Finished:'b-fin'};
+  return`<span class="badge ${m[c]||'b-na'}"><span class="dot"></span>${c||'—'}</span>`;
+};
+const acqB = a => a?`<span class="badge ${a==='Purchased'?'b-pur':'b-don'}">${a}</span>`:'<span class="td-mut">—</span>';
+const assignB = a => a.staff && !a.date_returned
+  ? `<span class="badge b-asgn"><span class="dot"></span>${a.staff}</span>`
+  : (a.staff && a.date_returned ? `<span class="td-mut" style="font-size:12px">${a.staff} (returned)</span>` : '<span class="td-mut">—</span>');
+
+function getFiltered(){
+  let q=(document.getElementById('search').value||'').toLowerCase();
+  let cat=document.getElementById('fCat').value;
+  let cond=document.getElementById('fCond').value;
+  let acq=document.getElementById('fAcq').value;
+  let asgn=document.getElementById('fAssign').value;
+  return assets.filter(a=>{
+    let mq=!q||[a.name,a.asset_number,a.serial,a.staff,a.notes].some(f=>(f||'').toLowerCase().includes(q));
+    let mc=!cat||a.category===cat;
+    let mcd=!cond||a.condition===cond;
+    let ma=!acq||a.acquisition===acq;
+    let mas=!asgn||(asgn==='assigned'?!!(a.staff&&!a.date_returned):(!a.staff||!!a.date_returned));
+    return mq&&mc&&mcd&&ma&&mas;
+  }).sort((a,b)=>{
+    if(sortCol==='idx') return(assets.indexOf(a)-assets.indexOf(b))*sortDir;
+    if(sortCol==='sub_total') return((parseFloat(a.sub_total)||0)-(parseFloat(b.sub_total)||0))*sortDir;
+    return String(a[sortCol]||'').localeCompare(String(b[sortCol]||''))*sortDir;
+  });
+}
+
+function sortBy(col){
+  if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=1;}
+  render();
+}
+
+function renderStats(){
+  const total=assets.length;
+  const good=assets.filter(a=>a.condition==='Good').length;
+  const totalVal=assets.reduce((s,a)=>s+(parseFloat(a.sub_total)||0),0);
+  const atRisk=assets.filter(a=>['Bad','Missing','Stolen'].includes(a.condition)).length;
+  const assigned=assets.filter(a=>a.staff&&!a.date_returned).length;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat s-blue"><div class="stat-label">Total Assets</div><div class="stat-value">${total}</div><div class="stat-sub">All categories</div></div>
+    <div class="stat s-green"><div class="stat-label">Good Condition</div><div class="stat-value">${good}</div><div class="stat-sub">${total?Math.round(good/total*100):0}% of register</div></div>
+    <div class="stat s-amber"><div class="stat-label">Total Value</div><div class="stat-value" style="font-size:18px">&#8358;${fmt(Math.round(totalVal))}</div><div class="stat-sub">Across all items</div></div>
+    <div class="stat s-red"><div class="stat-label">Need Attention</div><div class="stat-value">${atRisk}</div><div class="stat-sub">Bad / Missing / Stolen</div></div>
+    <div class="stat s-purple"><div class="stat-label">Assigned</div><div class="stat-value">${assigned}</div><div class="stat-sub">Currently with staff</div></div>
+  `;
+}
+
+function render(){
+  renderStats();
+  const cols=['idx','name','category','asset_number','serial','condition','acquisition','sub_total','acquired','staff'];
+  cols.forEach(c=>{
+    let el=document.getElementById('th-'+c);
+    if(!el) return;
+    el.classList.toggle('sorted',sortCol===c);
+    el.querySelectorAll('.sa').forEach(s=>s.remove());
+    if(sortCol===c){let s=document.createElement('span');s.className='sa';s.style.cssText='margin-left:3px;opacity:.6;font-size:10px';s.textContent=sortDir===1?'↑':'↓';el.appendChild(s);}
+  });
+  const data=getFiltered();
+  document.getElementById('cinfo').textContent=`Showing ${data.length} of ${assets.length} assets`;
+  const tb=document.getElementById('tbody');
+  if(!data.length){tb.innerHTML=`<tr><td colspan="11" class="ecell">No assets match your search or filters.</td></tr>`;return;}
+  tb.innerHTML=data.map((a,i)=>`
+    <tr onclick="openDrawer(${a._id})">
+      <td class="td-mut" style="font-size:12px">${i+1}</td>
+      <td class="td-name">${a.name}</td>
+      <td>${catB(a.category)}</td>
+      <td class="td-mono">${a.asset_number||'—'}</td>
+      <td class="td-mono">${a.serial||'—'}</td>
+      <td>${condB(a.condition)}</td>
+      <td>${acqB(a.acquisition)}</td>
+      <td style="font-variant-numeric:tabular-nums;color:var(--text2)">&#8358;${fmt(a.sub_total)}</td>
+      <td class="td-mut">${fmtD(a.acquired)}</td>
+      <td>${assignB(a)}</td>
+      <td onclick="event.stopPropagation()"><div class="racts">
+        <button class="ibtn" title="Edit" onclick="editAsset(${a._id})"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M11.5 2.5l2 2L5 13H3v-2z"/><line x1="9.5" y1="4.5" x2="11.5" y2="6.5"/></svg></button>
+        <button class="ibtn del" title="Delete" onclick="confirmDel(${a._id})"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="3 5 4 14 12 14 13 5"/><line x1="1" y1="4" x2="15" y2="4"/><path d="M6 4V2.5h4V4"/></svg></button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function openDrawer(id){
+  const a=assets.find(x=>x._id===id); if(!a) return;
+  document.getElementById('dname').textContent=a.name;
+  document.getElementById('dno').textContent=a.asset_number||'No asset number recorded';
+  document.getElementById('dbadges').innerHTML=catB(a.category)+' '+condB(a.condition)+' '+acqB(a.acquisition);
+  document.getElementById('dbdy').innerHTML=`
+    <div class="dsec">
+      <div class="dsec-title">Identification</div>
+      <div class="drow"><span class="dk">Asset Number</span><span class="dv mono">${a.asset_number||'—'}</span></div>
+      <div class="drow"><span class="dk">Serial Number</span><span class="dv mono">${a.serial||'—'}</span></div>
+      <div class="drow"><span class="dk">Category</span><span class="dv">${catB(a.category)}</span></div>
+      <div class="drow"><span class="dk">Condition</span><span class="dv">${condB(a.condition)}</span></div>
+    </div>
+    <div class="dsec">
+      <div class="dsec-title">Acquisition</div>
+      <div class="drow"><span class="dk">How Acquired</span><span class="dv">${acqB(a.acquisition)}</span></div>
+      <div class="drow"><span class="dk">Date Acquired</span><span class="dv">${fmtD(a.acquired)}</span></div>
+      <div class="drow"><span class="dk">Unit Cost</span><span class="dv">&#8358;${fmt(a.unit_cost)}</span></div>
+      <div class="drow"><span class="dk">Quantity</span><span class="dv">${a.quantity||'—'}</span></div>
+      <div class="drow"><span class="dk">Sub-Total</span><span class="dv" style="font-size:15px;color:var(--text)">&#8358;${fmt(a.sub_total)}</span></div>
+    </div>
+    <div class="dsec">
+      <div class="dsec-title">Assignment</div>
+      <div class="drow"><span class="dk">Assigned To</span><span class="dv">${a.staff||'Unassigned'}</span></div>
+      <div class="drow"><span class="dk">Date Assigned</span><span class="dv">${fmtD(a.date_assigned)}</span></div>
+      <div class="drow"><span class="dk">Date Returned</span><span class="dv">${fmtD(a.date_returned)}</span></div>
+    </div>
+    ${a.notes?`<div class="dsec"><div class="dsec-title">Notes</div><p style="font-size:13px;color:var(--text2);line-height:1.65">${a.notes}</p></div>`:''}
+  `;
+  document.getElementById('dft').innerHTML=`
+    <button class="btn" style="flex:1" onclick="editAsset(${id});closeDrawer()">Edit Asset</button>
+    <button class="btn dan" onclick="confirmDel(${id});closeDrawer()">Delete</button>
+  `;
+  document.getElementById('dov').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+const closeDrawer=()=>{document.getElementById('dov').classList.remove('open');document.getElementById('drawer').classList.remove('open');};
+
+function openModal(id){
+  editId=id||null;
+  document.getElementById('mtitle').textContent=id?'Edit Asset':'Add Asset';
+  const a=id?assets.find(x=>x._id===id):{};
+  const set=(el,v)=>document.getElementById(el).value=v||'';
+  set('fn',a.name); set('fan',a.asset_number); set('fsn',a.serial);
+  set('fdt',a.acquired); set('fuc',a.unit_cost);
+  document.getElementById('fqt').value=a.quantity||1;
+  document.getElementById('fcat').value=a.category||'IT & Electronics';
+  document.getElementById('fcond').value=a.condition||'Good';
+  document.getElementById('facq').value=a.acquisition||'Purchased';
+  set('fst',a.staff); set('fda',a.date_assigned); set('fdr',a.date_returned); set('fno',a.notes);
+  document.getElementById('mov').classList.add('open');
+  setTimeout(()=>document.getElementById('fn').focus(),50);
+}
+function editAsset(id){openModal(id);}
+const closeModal=()=>document.getElementById('mov').classList.remove('open');
+
+function saveAsset(){
+  const name=document.getElementById('fn').value.trim();
+  if(!name){document.getElementById('fn').focus();return;}
+  const qty=parseFloat(document.getElementById('fqt').value)||1;
+  const cost=parseFloat(document.getElementById('fuc').value)||0;
+  const obj={
+    _id: editId||nextId++,
+    name, category:document.getElementById('fcat').value,
+    condition:document.getElementById('fcond').value,
+    asset_number:document.getElementById('fan').value.trim(),
+    serial:document.getElementById('fsn').value.trim(),
+    acquisition:document.getElementById('facq').value,
+    acquired:document.getElementById('fdt').value,
+    unit_cost:cost, quantity:qty, sub_total:cost*qty,
+    staff:document.getElementById('fst').value.trim(),
+    date_assigned:document.getElementById('fda').value,
+    date_returned:document.getElementById('fdr').value,
+    notes:document.getElementById('fno').value.trim()
+  };
+  if(editId){ assets=assets.map(a=>a._id===editId?obj:a); }
+  else { assets.push(obj); }
+  save(); closeModal(); render();
+  toast(editId?'Asset updated.':'Asset added successfully.');
+}
+
+let pDel=null;
+function confirmDel(id){
+  const a=assets.find(x=>x._id===id); pDel=id;
+  document.getElementById('cmsg').textContent=`"${a.name}" will be permanently removed from the register.`;
+  document.getElementById('cov').classList.add('open');
+  document.getElementById('cok').onclick=()=>{assets=assets.filter(x=>x._id!==pDel);save();closeConfirm();render();toast('Asset deleted.');};
+}
+const closeConfirm=()=>{document.getElementById('cov').classList.remove('open');pDel=null;};
+
+// ── GOOGLE SHEETS SYNC ──
+function getSheetsUrl(){ return localStorage.getItem('vf_sheets_url')||''; }
+
+function updateSyncUI(){
+  const url=getSheetsUrl();
+  const dot=document.getElementById('sdot');
+  const txt=document.getElementById('stext');
+  const btn=document.getElementById('sync-now-btn');
+  const mbtn=document.getElementById('manual-sync-btn');
+  if(url){
+    dot.className='sync-dot ok';
+    txt.textContent='Google Sheets backup connected — syncing automatically';
+    btn.style.display='inline-flex';
+    if(mbtn) mbtn.style.display='inline-flex';
+  } else {
+    dot.className='sync-dot';
+    txt.textContent='Local storage only — connect Google Sheets for backup';
+    btn.style.display='none';
+    if(mbtn) mbtn.style.display='none';
+  }
+}
+
+async function syncToSheets(){
+  const url=getSheetsUrl(); if(!url) return;
+  const dot=document.getElementById('sdot');
+  const txt=document.getElementById('stext');
+  dot.className='sync-dot syncing';
+  txt.textContent='Syncing to Google Sheets…';
+  try {
+    await fetch(url, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(assets)
+    });
+    dot.className='sync-dot ok';
+    txt.textContent='Synced to Google Sheets — '+new Date().toLocaleTimeString();
+  } catch(e){
+    dot.className='sync-dot error';
+    txt.textContent='Sync failed — check your URL in Sheets Backup settings';
+  }
+}
+
+let syncDebounce;
+function autoSync(){ clearTimeout(syncDebounce); syncDebounce=setTimeout(syncToSheets, 1500); }
+
+function openSettings(){
+  document.getElementById('sheets-url').value=getSheetsUrl();
+  document.getElementById('url-status').textContent='';
+  updateSyncUI();
+  document.getElementById('sov').classList.add('open');
+}
+const closeSettings=()=>document.getElementById('sov').classList.remove('open');
+
+async function saveSheetUrl(){
+  const url=document.getElementById('sheets-url').value.trim();
+  const status=document.getElementById('url-status');
+  if(!url){ localStorage.removeItem('vf_sheets_url'); updateSyncUI(); status.textContent='URL cleared.'; return; }
+  if(!url.includes('script.google.com')){ status.style.color='var(--vf-red)'; status.textContent='That does not look like a valid Apps Script URL.'; return; }
+  localStorage.setItem('vf_sheets_url', url);
+  status.style.color='var(--text3)'; status.textContent='Saved. Testing connection…';
+  updateSyncUI();
+  try {
+    await fetch(url, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(assets)
+    });
+    status.style.color='var(--vf-green)'; status.textContent='✓ Connected and synced successfully! Your data is now backed up.';
+  } catch(e){
+    status.style.color='var(--vf-red)'; status.textContent='Could not reach that URL. Double-check you deployed as a Web App with "Anyone" access.';
+  }
+}
+
+function clearSheetUrl(){
+  localStorage.removeItem('vf_sheets_url');
+  document.getElementById('sheets-url').value='';
+  document.getElementById('url-status').style.color='var(--text3)';
+  document.getElementById('url-status').textContent='Google Sheets backup disconnected.';
+  updateSyncUI();
+}
+
+function exportCSV(){
+  const rows=[['Item Name','Category','Asset Number','Serial Number','Acquisition','Date Acquired','Unit Cost (NGN)','Quantity','Sub-Total (NGN)','Condition','Assigned To','Date Assigned','Date Returned','Notes']];
+  assets.forEach(a=>rows.push([a.name,a.category,a.asset_number||'',a.serial||'',a.acquisition||'',a.acquired||'',a.unit_cost||'',a.quantity||'',a.sub_total||'',a.condition,a.staff||'',a.date_assigned||'',a.date_returned||'',a.notes||'']));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`VF_Asset_Register_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported — ready to open in Excel.');
+}
+
+let tt;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+document.getElementById('mov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+document.getElementById('sov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSettings();});
+document.getElementById('cov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeConfirm();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeSettings();closeConfirm();closeDrawer();}});
+
+updateSyncUI();
+render();
+</script>
+</body>
+</html>
