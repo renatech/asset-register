@@ -1250,30 +1250,77 @@ updateSyncUI();
 updateSessionUI();
 render();
 
-// Load latest data from Firebase on startup
-(async function loadFromFirebase(){
-  try{
+// ── REAL-TIME FIREBASE LISTENER ──
+// Firebase Realtime Database supports Server-Sent Events (SSE)
+// This keeps a live connection open and updates the UI whenever data changes on any device
+let fbEventSource = null;
+let isLocalUpdate = false; // flag to avoid re-rendering our own changes
+
+function startFirebaseListener() {
+  if (fbEventSource) fbEventSource.close();
+  try {
+    fbEventSource = new EventSource(`${FB_URL}/assets.json`);
+    fbEventSource.addEventListener('put', function(e) {
+      try {
+        const payload = JSON.parse(e.data);
+        if (!payload.data) return;
+        if (isLocalUpdate) { isLocalUpdate = false; return; } // skip our own saves
+        let incoming = payload.data;
+        let arr = [];
+        if (Array.isArray(incoming)) {
+          arr = incoming.filter(a => a && a._id);
+        } else if (typeof incoming === 'object') {
+          arr = Object.values(incoming).filter(a => a && a._id);
+        }
+        if (arr.length > 0) {
+          assets = arr.map(a => ({...a, dep_value: Math.round(calcDep(a))}));
+          nextId = assets.reduce((m,a) => Math.max(m, a._id||0), 0) + 1;
+          localStorage.setItem(SK, JSON.stringify(assets));
+          render();
+          renderStats();
+          // refresh charts if open
+          const chartsActive = document.getElementById('panel-charts').classList.contains('active');
+          if (chartsActive) renderCharts();
+        }
+      } catch(err) {}
+    });
+    fbEventSource.onerror = function() {
+      // silently retry — EventSource reconnects automatically
+    };
+  } catch(e) {}
+}
+
+// Override save to flag local updates so listener ignores them
+const _originalPush = pushToFirebase;
+async function pushToFirebase() {
+  isLocalUpdate = true;
+  await _originalPush();
+}
+
+// Load latest data from Firebase on startup then start listener
+(async function initFirebase(){
+  try {
     // Load assets
-    const res=await fetch(`${FB_URL}/assets.json`);
-    const data=await res.json();
-    if(data&&typeof data==='object'&&!Array.isArray(data)){
-      // Firebase stores as object with keys, convert to array
-      const arr=Object.values(data).filter(a=>a&&a._id);
-      if(arr.length>0){
-        assets=arr.map(a=>({...a,dep_value:Math.round(calcDep(a))}));
-        nextId=assets.reduce((m,a)=>Math.max(m,a._id||0),0)+1;
-        localStorage.setItem(SK,JSON.stringify(assets));
-        render();
-      }
-    } else if(Array.isArray(data)&&data.length>0){
-      assets=data.map(a=>({...a,dep_value:Math.round(calcDep(a))}));
-      nextId=assets.reduce((m,a)=>Math.max(m,a._id||0),0)+1;
-      localStorage.setItem(SK,JSON.stringify(assets));
+    const res = await fetch(`${FB_URL}/assets.json`);
+    const data = await res.json();
+    let arr = [];
+    if (Array.isArray(data) && data.length > 0) {
+      arr = data.filter(a => a && a._id);
+    } else if (data && typeof data === 'object') {
+      arr = Object.values(data).filter(a => a && a._id);
+    }
+    if (arr.length > 0) {
+      assets = arr.map(a => ({...a, dep_value: Math.round(calcDep(a))}));
+      nextId = assets.reduce((m,a) => Math.max(m, a._id||0), 0) + 1;
+      localStorage.setItem(SK, JSON.stringify(assets));
       render();
     }
     // Load staff accounts
     await loadStaffFromFirebase();
-  }catch(e){}
+  } catch(e) {}
+
+  // Start real-time listener after initial load
+  startFirebaseListener();
 })();
 </script>
 </body>
