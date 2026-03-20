@@ -1250,94 +1250,77 @@ updateSyncUI();
 updateSessionUI();
 render();
 
-// ── REAL-TIME FIREBASE LISTENER ──
-// Firebase Realtime Database supports Server-Sent Events (SSE)
-// This keeps a live connection open and updates the UI whenever data changes on any device
-let fbEventSource = null;
-let isLocalUpdate = false; // flag to avoid re-rendering our own changes
+// ── REAL-TIME SYNC via polling (every 3 seconds) ──
+let isSyncing = false;
+let lastAssetsHash = '';
+let lastStaffHash = '';
 
-function startFirebaseListener() {
-  if (fbEventSource) fbEventSource.close();
-  try {
-    fbEventSource = new EventSource(`${FB_URL}/assets.json`);
-    fbEventSource.addEventListener('put', function(e) {
-      try {
-        const payload = JSON.parse(e.data);
-        if (!payload.data) return;
-        if (isLocalUpdate) { isLocalUpdate = false; return; }
-        let incoming = payload.data;
-        let arr = [];
-        if (Array.isArray(incoming)) {
-          arr = incoming.filter(a => a && a._id);
-        } else if (typeof incoming === 'object') {
-          arr = Object.values(incoming).filter(a => a && a._id);
-        }
-        if (arr.length > 0) {
-          assets = arr.map(a => ({...a, dep_value: Math.round(calcDep(a))}));
-          nextId = assets.reduce((m,a) => Math.max(m, a._id||0), 0) + 1;
-          localStorage.setItem(SK, JSON.stringify(assets));
-          render();
-          renderStats();
-          const chartsActive = document.getElementById('panel-charts').classList.contains('active');
-          if (chartsActive) renderCharts();
-        }
-      } catch(err) {}
-    });
-    fbEventSource.onerror = function() {};
-  } catch(e) {}
-
-  // Real-time listener for staff accounts
-  try {
-    const staffEventSource = new EventSource(`${FB_URL}/staff.json`);
-    staffEventSource.addEventListener('put', function(e) {
-      try {
-        const payload = JSON.parse(e.data);
-        if (!payload.data || !Array.isArray(payload.data)) return;
-        const incoming = payload.data.filter(a => a && a.name);
-        if (incoming.length > 0) {
-          localStorage.setItem(STAFF_KEY, JSON.stringify(incoming));
-          buildUserSelect();
-          // Re-render staff list if settings modal is open
-          const settingsOpen = document.getElementById('sov').classList.contains('open');
-          if (settingsOpen) renderStaffList();
-        }
-      } catch(err) {}
-    });
-    staffEventSource.onerror = function() {};
-  } catch(e) {}
+function hashData(data){
+  const s=JSON.stringify(data);return s.length+'_'+s.slice(0,80);
 }
 
-// Override save to flag local updates so listener ignores them
-const _originalPush = pushToFirebase;
-async function pushToFirebase() {
-  isLocalUpdate = true;
-  await _originalPush();
+function parseFirebaseAssets(data){
+  if(!data)return[];
+  if(Array.isArray(data))return data.filter(a=>a&&a._id);
+  if(typeof data==='object')return Object.values(data).filter(a=>a&&a._id);
+  return[];
 }
 
-// Load latest data from Firebase on startup then start listener
-(async function initFirebase(){
-  try {
-    // Load assets
-    const res = await fetch(`${FB_URL}/assets.json`);
-    const data = await res.json();
-    let arr = [];
-    if (Array.isArray(data) && data.length > 0) {
-      arr = data.filter(a => a && a._id);
-    } else if (data && typeof data === 'object') {
-      arr = Object.values(data).filter(a => a && a._id);
+async function syncFromFirebase(){
+  if(isSyncing)return;
+  isSyncing=true;
+  try{
+    // Sync assets
+    const res=await fetch(`${FB_URL}/assets.json`);
+    const data=await res.json();
+    const arr=parseFirebaseAssets(data);
+    if(arr.length>0){
+      const h=hashData(arr);
+      if(h!==lastAssetsHash){
+        lastAssetsHash=h;
+        assets=arr.map(a=>({...a,dep_value:Math.round(calcDep(a))}));
+        nextId=assets.reduce((m,a)=>Math.max(m,a._id||0),0)+1;
+        localStorage.setItem(SK,JSON.stringify(assets));
+        render();
+        const chartsActive=document.getElementById('panel-charts').classList.contains('active');
+        if(chartsActive)renderCharts();
+      }
     }
-    if (arr.length > 0) {
-      assets = arr.map(a => ({...a, dep_value: Math.round(calcDep(a))}));
-      nextId = assets.reduce((m,a) => Math.max(m, a._id||0), 0) + 1;
-      localStorage.setItem(SK, JSON.stringify(assets));
+    // Sync staff
+    const sres=await fetch(`${FB_URL}/staff.json`);
+    const sdata=await sres.json();
+    if(sdata&&Array.isArray(sdata)&&sdata.length>0){
+      const sh=hashData(sdata);
+      if(sh!==lastStaffHash){
+        lastStaffHash=sh;
+        localStorage.setItem(STAFF_KEY,JSON.stringify(sdata));
+        buildUserSelect();
+        const settingsOpen=document.getElementById('sov').classList.contains('open');
+        if(settingsOpen)renderStaffList();
+      }
+    }
+  }catch(e){}
+  isSyncing=false;
+}
+
+// Startup: load from Firebase then poll every 3 seconds
+(async function initFirebase(){
+  try{
+    const res=await fetch(`${FB_URL}/assets.json`);
+    const data=await res.json();
+    const arr=parseFirebaseAssets(data);
+    if(arr.length>0){
+      assets=arr.map(a=>({...a,dep_value:Math.round(calcDep(a))}));
+      nextId=assets.reduce((m,a)=>Math.max(m,a._id||0),0)+1;
+      lastAssetsHash=hashData(arr);
+      localStorage.setItem(SK,JSON.stringify(assets));
       render();
     }
-    // Load staff accounts
     await loadStaffFromFirebase();
-  } catch(e) {}
-
-  // Start real-time listener after initial load
-  startFirebaseListener();
+    const sd=getStaffAccounts();
+    if(sd.length)lastStaffHash=hashData(sd);
+  }catch(e){}
+  setInterval(syncFromFirebase,3000);
 })();
 </script>
 </body>
