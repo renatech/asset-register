@@ -536,6 +536,7 @@ document.head.appendChild(link);
             <th onclick="sortBy('sub_total')" id="th-sub_total">Cost (&#8358;)</th>
             <th onclick="sortBy('dep_value')" id="th-dep_value">Value (&#8358;)</th>
             <th onclick="sortBy('acquired')" id="th-acquired">Acquired</th>
+            <th onclick="sortBy('eol')" id="th-eol">End of Life</th>
             <th onclick="sortBy('staff')" id="th-staff">Assigned To</th>
             <th style="width:68px">Actions</th>
           </tr></thead>
@@ -746,15 +747,18 @@ function getAdminHash(){return localStorage.getItem(PW_KEY)||hashPw('visiola2024
 function getStaffAccounts(){return JSON.parse(localStorage.getItem(STAFF_KEY)||'[]');}
 function saveStaffAccounts(list){
   localStorage.setItem(STAFF_KEY,JSON.stringify(list));
-  // Push to Firebase so all devices stay in sync
-  fetch(`${FB_URL}/staff.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(list)}).catch(()=>{});
+  // Store as object keyed by name for reliable Firebase retrieval
+  const obj={};
+  list.forEach((a,i)=>{obj['staff_'+i]=a;});
+  fetch(`${FB_URL}/staff.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}).catch(()=>{});
 }
 async function loadStaffFromFirebase(){
   try{
     const res=await fetch(`${FB_URL}/staff.json`);
     const data=await res.json();
-    if(data&&Array.isArray(data)&&data.length>0){
-      localStorage.setItem(STAFF_KEY,JSON.stringify(data));
+    const arr=parseFirebaseStaff(data);
+    if(arr.length>0){
+      localStorage.setItem(STAFF_KEY,JSON.stringify(arr));
     }
   }catch(e){}
   buildUserSelect();
@@ -870,7 +874,46 @@ if(savedSession){
 }
 
 // ── DEPRECIATION ──
-function calcDep(r){const cost=parseFloat(r.sub_total)||0;if(!cost||!r.acquired)return cost;const yrs=(new Date()-new Date(r.acquired))/(1000*60*60*24*365.25);return Math.max(cost-(cost*0.20*Math.max(yrs,0)),cost*0.10);}
+// Consumables — no depreciation applied
+const CONSUMABLES = ['a4 paper','paper','pens','pen ','stapl','paper clip','pin remover',
+  'office pin','thumb tack','brown envelope','office folder','binder clip','easy glue',
+  'scissors','file and pen','stapling pin','flash drive','marker','eraser','tape','ink'];
+
+function isConsumable(r){
+  const n=(r.name||'').toLowerCase();
+  return CONSUMABLES.some(k=>n.includes(k));
+}
+
+function calcDep(r){
+  const cost=parseFloat(r.sub_total)||0;
+  if(!cost||!r.acquired)return cost;
+  // No depreciation for consumables / stationery
+  if(isConsumable(r))return cost;
+  const yrs=(new Date()-new Date(r.acquired))/(1000*60*60*24*365.25);
+  // 20%/yr straight-line, 5yr useful life, floor at 10%
+  return Math.max(cost-(cost*0.20*Math.max(yrs,0)), cost*0.10);
+}
+
+function calcEndOfLife(r){
+  if(!r.acquired||isConsumable(r))return null;
+  const cost=parseFloat(r.sub_total)||0;
+  if(!cost)return null;
+  // End of useful life = acquired date + 5 years
+  const d=new Date(r.acquired);
+  d.setFullYear(d.getFullYear()+5);
+  return d;
+}
+
+function eolStatus(r){
+  const eol=calcEndOfLife(r);
+  if(!eol)return null;
+  const now=new Date();
+  const msLeft=eol-now;
+  const daysLeft=Math.ceil(msLeft/(1000*60*60*24));
+  if(daysLeft<0)return{label:'Expired',days:daysLeft,cls:'b-stol'};
+  if(daysLeft<=180)return{label:`${daysLeft}d left`,days:daysLeft,cls:'b-miss'};
+  return{label:eol.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),days:daysLeft,cls:'b-good'};
+}
 
 // ── AUDIT ──
 let auditLog=JSON.parse(localStorage.getItem(AUDIT_KEY)||'[]');
@@ -923,6 +966,11 @@ function getFiltered(){
   }).sort((a,b)=>{
     if(sortCol==='idx')return(assets.indexOf(a)-assets.indexOf(b))*sortDir;
     if(['sub_total','dep_value'].includes(sortCol))return((parseFloat(a[sortCol])||0)-(parseFloat(b[sortCol])||0))*sortDir;
+    if(sortCol==='eol'){
+      const ea=calcEndOfLife(a)?calcEndOfLife(a).getTime():Infinity;
+      const eb=calcEndOfLife(b)?calcEndOfLife(b).getTime():Infinity;
+      return(ea-eb)*sortDir;
+    }
     return String(a[sortCol]||'').localeCompare(String(b[sortCol]||''))*sortDir;
   });
 }
@@ -940,6 +988,8 @@ function renderStats(){
   const purchased=assets.filter(a=>a.acquisition==='Purchased').length;
   const assigned=assets.filter(a=>a.staff&&!a.date_returned).length;
   const donatedVal=assets.filter(a=>a.acquisition==='Donated').reduce((s,a)=>s+(parseFloat(a.sub_total)||0),0);
+  const expired=assets.filter(a=>!isConsumable(a)&&calcEndOfLife(a)&&calcEndOfLife(a)<new Date()).length;
+  const expiringSoon=assets.filter(a=>!isConsumable(a)&&calcEndOfLife(a)&&calcEndOfLife(a)>new Date()&&(calcEndOfLife(a)-new Date())/(1000*60*60*24)<=180).length;
   document.getElementById('stats').innerHTML=`
     <div class="stat s-blue"><div class="stat-label">Total Assets</div><div class="stat-value">${total}</div><div class="stat-sub">${donated} donated · ${purchased} purchased</div></div>
     <div class="stat s-green"><div class="stat-label">Good Condition</div><div class="stat-value">${good}</div><span class="stat-pct" style="background:#EBF8EF;color:#1A7A40">${goodPct}% of total</span><div class="prog-wrap"><div class="prog-bar" style="width:${goodPct}%;background:#AFCB08"></div></div></div>
@@ -947,13 +997,13 @@ function renderStats(){
     <div class="stat s-amber"><div class="stat-label">Original Cost</div><div class="stat-value small">&#8358;${fmt(Math.round(totalCost))}</div><div class="stat-sub">Before depreciation</div></div>
     <div class="stat s-teal"><div class="stat-label">Current Value</div><div class="stat-value small">&#8358;${fmt(Math.round(totalDep))}</div><div class="stat-sub">After depreciation</div></div>
     <div class="stat s-blue"><div class="stat-label">Donated</div><div class="stat-value">${donated}</div><div class="stat-sub">&#8358;${fmt(Math.round(donatedVal))}</div></div>
-    <div class="stat s-orange"><div class="stat-label">Purchased</div><div class="stat-value">${purchased}</div><div class="stat-sub">${total?Math.round(purchased/total*100):0}% of register</div></div>
+    <div class="stat s-red"><div class="stat-label">Life Expired</div><div class="stat-value">${expired}</div><div class="stat-sub">${expiringSoon} expiring in 6mo</div></div>
     <div class="stat s-purple"><div class="stat-label">Assigned</div><div class="stat-value">${assigned}</div><div class="stat-sub">With staff now</div></div>`;
 }
 
 function render(){
   renderStats();
-  const cols=['idx','name','category','asset_number','condition','acquisition','donor','sub_total','dep_value','acquired','staff'];
+  const cols=['idx','name','category','asset_number','condition','acquisition','donor','sub_total','dep_value','acquired','eol','staff'];
   cols.forEach(c=>{const el=document.getElementById('th-'+c);if(!el)return;el.classList.toggle('sorted',sortCol===c);el.querySelectorAll('.sa').forEach(s=>s.remove());if(sortCol===c){const s=document.createElement('span');s.className='sa';s.style.cssText='margin-left:3px;opacity:.6;font-size:9px';s.textContent=sortDir===1?'↑':'↓';el.appendChild(s);}});
   const data=getFiltered();
   document.getElementById('cinfo').textContent=`Showing ${data.length} of ${assets.length} assets`;
@@ -962,8 +1012,13 @@ function render(){
     ?`<button class="ibtn" onclick="editAsset(${id})"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M11.5 2.5l2 2L5 13H3v-2z"/><line x1="9.5" y1="4.5" x2="11.5" y2="6.5"/></svg></button><button class="ibtn del" onclick="confirmDel(${id})"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="3 5 4 14 12 14 13 5"/><line x1="1" y1="4" x2="15" y2="4"/><path d="M6 4V2.5h4V4"/></svg></button>`
     :`<button class="ibtn" disabled title="Login to edit"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="8" height="7" rx="1"/><path d="M5 6V4a2 2 0 014 0v2"/></svg></button>`;
   const tb=document.getElementById('tbody');
-  if(!data.length){tb.innerHTML=`<tr><td colspan="12" class="ecell">No assets match.</td></tr>`;}
-  else tb.innerHTML=data.map((a,i)=>`
+  if(!data.length){tb.innerHTML=`<tr><td colspan="13" class="ecell">No assets match.</td></tr>`;}
+  else tb.innerHTML=data.map((a,i)=>{
+    const eol=eolStatus(a);
+    const eolCell=eol
+      ?`<span class="badge ${eol.cls}">${eol.label}</span>`
+      :`<span class="td-mut">N/A</span>`;
+    return`
     <tr onclick="openDrawer(${a._id})">
       <td class="td-mut" style="font-size:11px">${i+1}</td>
       <td class="td-name">${a.name}</td>
@@ -975,9 +1030,10 @@ function render(){
       <td style="font-variant-numeric:tabular-nums;color:var(--text2)">&#8358;${fmt(a.sub_total)}</td>
       <td class="td-dep">&#8358;${fmt(a.dep_value)}</td>
       <td class="td-mut">${fmtD(a.acquired)}</td>
+      <td>${eolCell}</td>
       <td>${assignB(a)}</td>
       <td onclick="event.stopPropagation()"><div class="racts">${actBtn(a._id)}</div></td>
-    </tr>`).join('');
+    </tr>`;}).join('');
   const cl=document.getElementById('card-list');
   if(!data.length){cl.innerHTML=`<div class="asset-card ecell">No assets match.</div>`;}
   else cl.innerHTML=data.map(a=>`
@@ -1067,13 +1123,18 @@ function openDrawer(id){
   document.getElementById('dno').textContent=a.asset_number||'No asset number';
   document.getElementById('dbadges').innerHTML=catB(a.category)+' '+condB(a.condition)+' '+acqB(a.acquisition);
   const depPct=a.sub_total?Math.round((1-(a.dep_value/a.sub_total))*100):0;
+  const eol=eolStatus(a);
+  const eolDate=calcEndOfLife(a);
+  const consumable=isConsumable(a);
   document.getElementById('dbdy').innerHTML=`
-    ${a.sub_total?`<div class="dep-box"><div class="dep-box-title">Depreciation (20%/yr)</div><div class="dep-box-grid">
+    ${a.sub_total&&!consumable?`<div class="dep-box"><div class="dep-box-title">Depreciation (20%/yr · 5yr useful life)</div><div class="dep-box-grid">
       <div class="dep-item"><div class="lbl">Original Cost</div><div class="val">&#8358;${fmt(a.sub_total)}</div></div>
       <div class="dep-item"><div class="lbl">Current Value</div><div class="val">&#8358;${fmt(a.dep_value)}</div></div>
       <div class="dep-item"><div class="lbl">Depreciated</div><div class="val">${depPct}%</div></div>
       <div class="dep-item"><div class="lbl">Years held</div><div class="val">${a.acquired?((new Date()-new Date(a.acquired))/(1000*60*60*24*365.25)).toFixed(1):'—'}</div></div>
+      <div class="dep-item" style="grid-column:1/-1"><div class="lbl">End of useful life</div><div class="val" style="font-size:12px;color:${eol&&eol.days<0?'var(--vf-red)':eol&&eol.days<=180?'#B84800':'#1A7A40'}">${eolDate?eolDate.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}):'—'}${eol&&eol.days<0?' — <strong>Expired</strong>':eol&&eol.days<=180?` — <strong>${eol.days} days remaining</strong>':''}</div></div>
     </div></div>`:''}
+    ${consumable?`<div style="background:var(--vf-green-light);border:1px solid rgba(175,203,8,.3);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;font-size:12px;color:#608200"><strong>Consumable / Stationery</strong> — depreciation not applied to this item.</div>`:''}
     <div class="dsec"><div class="dsec-title">Identification</div>
       <div class="drow"><span class="dk">Asset Number</span><span class="dv mono">${a.asset_number||'—'}</span></div>
       <div class="drow"><span class="dk">Serial Number</span><span class="dv mono">${a.serial||'—'}</span></div>
@@ -1216,7 +1277,12 @@ async function connectFirebase(){
 }
 function disconnectFirebase(){localStorage.removeItem(FB_KEY);document.getElementById('fb-url').value='';document.getElementById('fb-status').className='fb-status';document.getElementById('fb-status').textContent='Disconnected.';updateSyncUI();toast('Firebase disconnected.');}
 async function pushToFirebase(){
-  try{await fetch(`${FB_URL}/assets.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(assets)});}catch(e){}
+  try{
+    // Store as object keyed by _id — Firebase handles objects more reliably than arrays
+    const obj={};
+    assets.forEach(a=>{obj['id_'+a._id]=a;});
+    await fetch(`${FB_URL}/assets.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+  }catch(e){}
 }
 function updateSyncUI(){
   const dot=document.getElementById('sdot');
@@ -1226,8 +1292,12 @@ function updateSyncUI(){
 }
 
 function exportCSV(){
-  const rows=[['Item Name','Category','Asset Number','Serial','Source','Donor/Vendor','Date Acquired','Unit Cost','Qty','Sub-Total','Current Value','Condition','Assigned To','Date Assigned','Date Returned','Notes']];
-  assets.forEach(a=>rows.push([a.name,a.category,a.asset_number||'',a.serial||'',a.acquisition||'',a.donor||'',a.acquired||'',a.unit_cost||'',a.quantity||'',a.sub_total||'',a.dep_value||'',a.condition,a.staff||'',a.date_assigned||'',a.date_returned||'',a.notes||'']));
+  const rows=[['Item Name','Category','Asset Number','Serial','Source','Donor/Vendor','Date Acquired','Unit Cost','Qty','Sub-Total','Current Value','End of Useful Life','Condition','Assigned To','Date Assigned','Date Returned','Notes']];
+  assets.forEach(a=>{
+    const eolDate=calcEndOfLife(a);
+    const eolStr=eolDate?eolDate.toLocaleDateString('en-GB'):(isConsumable(a)?'N/A (Consumable)':'—');
+    rows.push([a.name,a.category,a.asset_number||'',a.serial||'',a.acquisition||'',a.donor||'',a.acquired||'',a.unit_cost||'',a.quantity||'',a.sub_total||'',a.dep_value||'',eolStr,a.condition,a.staff||'',a.date_assigned||'',a.date_returned||'',a.notes||'']);
+  });
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
@@ -1261,8 +1331,20 @@ function hashData(data){
 
 function parseFirebaseAssets(data){
   if(!data)return[];
+  // Firebase returns object with keys like "id_1", "id_2" etc
+  if(typeof data==='object'&&!Array.isArray(data)){
+    return Object.values(data).filter(a=>a&&a._id);
+  }
   if(Array.isArray(data))return data.filter(a=>a&&a._id);
-  if(typeof data==='object')return Object.values(data).filter(a=>a&&a._id);
+  return[];
+}
+
+function parseFirebaseStaff(data){
+  if(!data)return[];
+  if(typeof data==='object'&&!Array.isArray(data)){
+    return Object.values(data).filter(a=>a&&a.name);
+  }
+  if(Array.isArray(data))return data.filter(a=>a&&a.name);
   return[];
 }
 
@@ -1289,11 +1371,12 @@ async function syncFromFirebase(){
     // Sync staff
     const sres=await fetch(`${FB_URL}/staff.json`);
     const sdata=await sres.json();
-    if(sdata&&Array.isArray(sdata)&&sdata.length>0){
-      const sh=hashData(sdata);
+    const sarr=parseFirebaseStaff(sdata);
+    if(sarr.length>0){
+      const sh=hashData(sarr);
       if(sh!==lastStaffHash){
         lastStaffHash=sh;
-        localStorage.setItem(STAFF_KEY,JSON.stringify(sdata));
+        localStorage.setItem(STAFF_KEY,JSON.stringify(sarr));
         buildUserSelect();
         const settingsOpen=document.getElementById('sov').classList.contains('open');
         if(settingsOpen)renderStaffList();
